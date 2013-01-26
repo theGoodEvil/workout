@@ -20,22 +20,35 @@ def make_html(text, color="black"):
     return '<center><h1><font face="8BIT WONDER" color="%s">%s</font></h1></center>' % (color, text)
 
 
-class Pulse(object):
-    def __init__(self, num_events=4):
-        self.num_events = num_events
-        self.events = collections.deque([], num_events)
+class Pulse(pyglet.event.EventDispatcher):
+    def __init__(self, num_ticks=4):
+        super(Pulse, self).__init__()
+        self.num_ticks = num_ticks
+        self.ticks = collections.deque([], num_ticks)
+        self.set_rate(0)
 
     def tick(self):
-        self.events.append(time.time())
+        pyglet.clock.unschedule(self.reset_rate)
+        self.ticks.append(time.time())
+        self.set_rate(self.compute_rate())
+        pyglet.clock.schedule_once(self.reset_rate, 2)
 
-    def rate(self):
-        if len(self.events) < self.num_events:
-            return 0
-        elif time.time() - self.events[-1] > 2:
+    def reset_rate(self, delta_time):
+        self.set_rate(0)
+
+    def set_rate(self, rate):
+        self.rate = rate
+        self.dispatch_event("on_rate_changed", rate)
+
+    def compute_rate(self):
+        if len(self.ticks) < self.num_ticks:
             return 0
         else:
-            diffs = map(lambda t: t[1] - t[0], pairwise(self.events))
+            diffs = map(lambda t: t[1] - t[0], pairwise(self.ticks))
             return len(diffs) / sum(diffs) * 60
+
+
+Pulse.register_event_type("on_rate_changed")
 
 
 class Player(object):
@@ -95,10 +108,9 @@ class HeartbeatLayer(cocos.layer.Layer):
 class RateLayer(cocos.layer.Layer):
     def __init__(self, player):
         super(RateLayer, self).__init__()
-        self.player = player
 
         self.label = cocos.text.HTMLLabel(
-            "",
+            make_html("0"),
             width=240,
             anchor_x="center",
             anchor_y="center",
@@ -108,11 +120,10 @@ class RateLayer(cocos.layer.Layer):
         self.label.position = (120, 260)
         self.add(self.label)
 
-        self.schedule_interval(self.update, 0.2)
-
-    def update(self, delta_time):
-        rate = "%3.0f" % (self.player.pulse.rate())
-        self.label.element.text = make_html(rate)
+        @player.pulse.event
+        def on_rate_changed(rate):
+            rate_string = "%3.0f" % rate
+            self.label.element.text = make_html(rate_string)
 
 
 class PlayerLayer(cocos.layer.ColorLayer):
@@ -137,7 +148,7 @@ class PlayerLayer(cocos.layer.ColorLayer):
         self.add(self.heartbeat_layer)
 
     def instruct(self):
-        rate = self.player.pulse.rate()
+        rate = self.player.pulse.rate
         self.level.instruct(rate, self.show_instructor)
 
     def show_instructor(self, text="", show=True, color=WORKOUT_COLOR):
@@ -147,11 +158,20 @@ class PlayerLayer(cocos.layer.ColorLayer):
         self.color = color
 
         if show:
-            self.schedule_interval(self.hide_instructor, 1)
+            pyglet.clock.schedule_once(self.hide_instructor, 1)
 
     def hide_instructor(self, delta_time):
-        self.unschedule(self.hide_instructor)
         self.show_instructor(show=False)
+
+
+class ProgressBar(cocos.layer.ColorLayer):
+    def __init__(self):
+        super(ProgressBar, self).__init__(128, 128, 128, 255, width=480, height=16)
+        self.progress = cocos.layer.ColorLayer(64, 64, 64, 255, width=0, height=16)
+        self.add(self.progress)
+
+    def set_progress(self, progress):
+        self.progress.width = int(progress * 480)
 
 
 class WorkoutLayer(cocos.layer.Layer):
@@ -164,6 +184,11 @@ class WorkoutLayer(cocos.layer.Layer):
         ]
 
         map(self.add, self.player_layers)
+
+        self.progress_bar = ProgressBar()
+        self.progress_bar.set_progress(0.4)
+        self.add(self.progress_bar)
+
         self.schedule_interval(self.instruct, 4)
 
     def instruct(self, delta_time):
