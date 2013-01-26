@@ -5,6 +5,7 @@ import itertools
 import time
 
 import cocos
+from cocos.director import director
 import pyglet
 
 
@@ -147,8 +148,8 @@ class WorkoutLayer(cocos.layer.Layer):
 class TextLayer(cocos.layer.ColorLayer):
     is_event_handler = True
 
-    def __init__(self, text, color=(255, 0, 0, 255)):
-        super(TextLayer, self).__init__(*color)
+    def __init__(self, text):
+        super(TextLayer, self).__init__(255, 0, 0, 255)
 
         html = '<center><h1><font face="8BIT WONDER" color="white">%s</font></h1></center>' % text
         label = cocos.text.HTMLLabel(
@@ -162,29 +163,30 @@ class TextLayer(cocos.layer.ColorLayer):
         label.position = (240, 160)
         self.add(label)
 
-
-def make_scene(layer):
-    scene = cocos.scene.Scene(layer)
-    return scene
+    def on_key_press(self, key, modifiers):
+        next_scene()
 
 
-def follow(scene, next_scene):
-    layer = scene.get_children()[0]
-    layer.on_key_press = lambda k, m: director.replace(next_scene)
+def next_scene():
+    director.replace(director.scene.next_scene)
+
+
+def make_scenes(layers):
+    scenes = map(cocos.scene.Scene, layers)
+    for scene, next_scene in pairwise(scenes):
+        scene.next_scene = next_scene
+    return scenes
 
 
 if __name__ == "__main__":
     pyglet.font.add_file('8-bit wonder.ttf')
-    director = cocos.director.director
     director.init(width=480, height=320)
 
-    title = make_scene(TextLayer("WORKOUT"))
-    instructions = make_scene(TextLayer("HELLO.<br/>My name is Arnold."))
-    level_1 = make_scene(TextLayer("WARM UP.<br/>120-140 BPM"))
-    workout = make_scene(WorkoutLayer())
+    scenes = make_scenes([
+        TextLayer("WORKOUT"),
+        TextLayer("HELLO<br/>I AM YOUR INSTRUCTOR"),
+        TextLayer("WARM UP<br/>120-140 BPM"),
+        WorkoutLayer()
+    ])
 
-    follow(title, instructions)
-    follow(instructions, level_1)
-    follow(level_1, workout)
-
-    director.run(title)
+    director.run(scenes[0])
