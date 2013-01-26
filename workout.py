@@ -7,6 +7,7 @@ import time
 
 import cocos
 from cocos.director import director
+from cocos.utils import SequenceScene
 import pyglet
 
 
@@ -213,7 +214,7 @@ class TextLayer(cocos.layer.ColorLayer):
         self.add(label)
 
     def on_key_press(self, key, modifiers):
-        next_scene()
+        director.pop()
 
 
 class Level(object):
@@ -251,22 +252,11 @@ class WarmUp(Level):
             show_instructor(text="PERFECT")
 
 
-def next_scene():
-    director.replace(director.scene.next_scene)
-
-
-def make_scenes(layers):
-    scenes = map(cocos.scene.Scene, layers)
-    for scene, next_scene in pairwise(scenes):
-        scene.next_scene = next_scene
-    return scenes
-
-
 if __name__ == "__main__":
     pyglet.font.add_file('8-bit wonder.ttf')
     director.init(width=480, height=320)
 
-    scenes = make_scenes([
+    scenes = map(cocos.scene.Scene, [
         TextLayer("WORKOUT"),
         TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
         TextLayer("I AM YOUR INSTRUCTOR"),
@@ -274,4 +264,7 @@ if __name__ == "__main__":
         WorkoutLayer(WarmUp)
     ])
 
-    director.run(scenes[0])
+    # workaround for pyglet refresh issue
+    pyglet.clock.schedule(lambda dt: None)
+
+    director.run(SequenceScene(*scenes))
