@@ -48,18 +48,18 @@ class PlayerLayer(cocos.layer.ColorLayer):
         self.position = position
 
         self.label = cocos.text.Label(
-            '0.0',
-            font_name='Times New Roman',
-            font_size=32,
+            '0',
+            font_name='8BIT WONDER',
+            font_size=24,
             anchor_x='center',
             anchor_y='center')
-        self.label.position = (120, 40)
+        self.label.position = (120, 280)
         self.add(self.label)
 
         self.schedule_interval(self.update, 0.2)
 
     def update(self, delta_time):
-        rate = "%3.1f" % (self.player.pulse.rate())
+        rate = "%3.0f" % (self.player.pulse.rate())
         self.label.element.text = rate
 
     def on_key_press(self, key, modifiers):
@@ -82,6 +82,7 @@ class WorkoutLayer(cocos.layer.Layer):
 
 
 if __name__ == "__main__":
+    pyglet.font.add_file('8-bit wonder.ttf')
     cocos.director.director.init(width=480, height=320)
     layer = WorkoutLayer()
     scene = cocos.scene.Scene(layer)
