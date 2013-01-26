@@ -43,14 +43,15 @@ class PlayerLayer(cocos.layer.ColorLayer):
     is_event_handler = True
 
     def __init__(self, player, position):
-        super(PlayerLayer, self).__init__(255, 0, 0, 255, width=240, height=320)
+        super(PlayerLayer, self).__init__(22, 232, 247, 255, width=240, height=320)
         self.player = player
         self.position = position
 
         self.label = cocos.text.Label(
-            '0',
+            '',
             font_name='8BIT WONDER',
             font_size=24,
+            color=(0, 0, 0, 255),
             anchor_x='center',
             anchor_y='center')
         self.label.position = (120, 280)
