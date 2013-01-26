@@ -5,6 +5,7 @@ import itertools
 import operator
 import time
 
+from cocos.actions import MoveBy
 from cocos.director import director
 from cocos.layer import Layer, ColorLayer
 from cocos.scene import Scene
@@ -170,30 +171,26 @@ class PlayerLayer(ColorLayer):
 
 
 class ProgressBar(ColorLayer):
-    def __init__(self):
-        super(ProgressBar, self).__init__(128, 128, 128, 255, width=480, height=16)
-        self.progress = ColorLayer(64, 64, 64, 255, width=0, height=16)
-        self.add(self.progress)
+    def __init__(self, duration):
+        super(ProgressBar, self).__init__(64, 64, 64, 255, width=480, height=16)
 
-    def set_progress(self, progress):
-        self.progress.width = int(progress * 480)
+        self.bar = ColorLayer(128, 128, 128, 255, width=480, height=16)
+        self.bar.do(MoveBy((480, 0), duration))
+        self.add(self.bar)
 
 
 class WorkoutLayer(Layer):
-    def __init__(self, make_level):
+    def __init__(self, level_class):
         super(WorkoutLayer, self).__init__()
+        self.level_class = level_class
 
         self.player_layers = [
-            PlayerLayer(Player(pyglet.window.key.S), make_level(), (0, 0)),
-            PlayerLayer(Player(pyglet.window.key.L), make_level(), (240, 0))
+            PlayerLayer(Player(pyglet.window.key.S), level_class(), (0, 0)),
+            PlayerLayer(Player(pyglet.window.key.L), level_class(), (240, 0))
         ]
 
         map(self.add, self.player_layers)
-
-        self.progress_bar = ProgressBar()
-        self.progress_bar.set_progress(0.4)
-        self.add(self.progress_bar)
-
+        self.add(ProgressBar(level_class.time))
         self.schedule_interval(self.instruct, 4)
 
     def instruct(self, delta_time):
@@ -227,6 +224,8 @@ class Level(object):
 
 
 class WarmUp(Level):
+    time = 30
+
     def __init__(self):
         self.slow_warnings = collections.deque([
             "FASTER",
