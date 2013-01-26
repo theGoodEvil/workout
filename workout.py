@@ -41,6 +41,8 @@ class Player(object):
 
 class PlayerLayer(cocos.layer.ColorLayer):
     is_event_handler = True
+    HEART_SIZE_SMALL = 0.2
+    HEART_SIZE_BIG = 0.25
 
     def __init__(self, player, position):
         super(PlayerLayer, self).__init__(22, 232, 247, 255, width=240, height=320)
@@ -57,6 +59,11 @@ class PlayerLayer(cocos.layer.ColorLayer):
         self.label.position = (120, 280)
         self.add(self.label)
 
+        self.heart = cocos.sprite.Sprite("heart.png")
+        self.heart.position = (120, 140)
+        self.heart.scale = self.HEART_SIZE_SMALL
+        self.add(self.heart)
+
         self.schedule_interval(self.update, 0.2)
 
     def update(self, delta_time):
@@ -65,7 +72,11 @@ class PlayerLayer(cocos.layer.ColorLayer):
 
     def on_key_press(self, key, modifiers):
         if key == self.player.key:
+            self.heart.scale = self.HEART_SIZE_BIG
             self.player.trigger()
+
+    def on_key_release(self, key, modifiers):
+        self.heart.scale = self.HEART_SIZE_SMALL
 
 
 class WorkoutLayer(cocos.layer.Layer):
