@@ -191,7 +191,12 @@ class TextLayer(cocos.layer.ColorLayer):
         next_scene()
 
 
-class WarmUp(object):
+class Level(object):
+    def instruct(self, rate, show_instructor):
+        raise NotImplementedError
+
+
+class WarmUp(Level):
     def __init__(self):
         self.slow_warnings = collections.deque([
             "FASTER",
