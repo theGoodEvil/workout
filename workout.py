@@ -31,6 +31,8 @@ class Pulse(object):
     def rate(self):
         if len(self.events) < self.num_events:
             return 0
+        elif time.time() - self.events[-1] > 2:
+            return 0
         else:
             diffs = map(lambda t: t[1] - t[0], pairwise(self.events))
             return len(diffs) / sum(diffs) * 60
