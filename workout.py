@@ -192,9 +192,13 @@ class WorkoutLayer(Layer):
         map(self.add, self.player_layers)
         self.add(ProgressBar(level_class.time))
         self.schedule_interval(self.instruct, 4)
+        self.schedule_interval(self.complete, level_class.time)
 
     def instruct(self, delta_time):
         map(operator.methodcaller("instruct"), self.player_layers)
+
+    def complete(self, delta_time):
+        director.pop()
 
 
 class TextLayer(ColorLayer):
