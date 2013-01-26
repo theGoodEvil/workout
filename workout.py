@@ -39,7 +39,25 @@ class Player(object):
         self.pulse.tick()
 
 
-class PlayerLayer(cocos.layer.ColorLayer):
+class InstructorLayer(cocos.layer.ColorLayer):
+    def __init__(self, position):
+        super(InstructorLayer, self).__init__(255, 0, 0, 255, width=240, height=320)
+        self.position = position
+
+        self.label = cocos.text.Label(
+            'FASTER',
+            font_name='8BIT WONDER',
+            font_size=24,
+            color=(0, 0, 0, 255),
+            anchor_x='center',
+            anchor_y='center'
+        )
+
+        self.label.position = (120, 280)
+        self.add(self.label)
+
+
+class HeartbeatLayer(cocos.layer.ColorLayer):
     is_event_handler = True
 
     HEART_SIZE_SMALL = 0.2
@@ -47,7 +65,7 @@ class PlayerLayer(cocos.layer.ColorLayer):
     HEART_BEAT = pyglet.media.load("heartbeat.wav", streaming=False)
 
     def __init__(self, player, position):
-        super(PlayerLayer, self).__init__(22, 232, 247, 255, width=240, height=320)
+        super(HeartbeatLayer, self).__init__(22, 232, 247, 255, width=240, height=320)
         self.player = player
         self.position = position
 
@@ -82,6 +100,36 @@ class PlayerLayer(cocos.layer.ColorLayer):
 
     def on_key_release(self, key, modifiers):
         self.heart.scale = self.HEART_SIZE_SMALL
+
+
+class PlayerLayer(cocos.layer.Layer):
+    def __init__(self, player, position):
+        super(PlayerLayer, self).__init__()
+        self.player = player
+
+        self.instuctor_layer = InstructorLayer(position)
+        self.instuctor_layer.visible = False
+        self.add(self.instuctor_layer)
+
+        self.heartbeat_layer = HeartbeatLayer(player, position)
+        self.add(self.heartbeat_layer)
+
+        self.schedule_interval(self.instruct, 4)
+
+    def instruct(self, delta_time):
+        rate = self.player.pulse.rate()
+        if rate < 120:
+            self.show_instructor()
+
+    def show_instructor(self):
+        self.instuctor_layer.visible = True
+        self.heartbeat_layer.visible = False
+        self.schedule_interval(self.hide_instructor, 1)
+
+    def hide_instructor(self, delta_time):
+        self.instuctor_layer.visible = False
+        self.heartbeat_layer.visible = True
+        self.unschedule(self.hide_instructor)
 
 
 class WorkoutLayer(cocos.layer.Layer):
