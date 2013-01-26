@@ -131,10 +131,12 @@ if __name__ == "__main__":
     director.init(width=480, height=320)
 
     title = make_scene(TextLayer("WORKOUT"))
-    instructions = make_scene(TextLayer("Hello!<br/>My name is Arnold."))
+    instructions = make_scene(TextLayer("HELLO.<br/>My name is Arnold."))
+    level_1 = make_scene(TextLayer("WARM UP.<br/>120-140 BPM"))
     workout = make_scene(WorkoutLayer())
 
     follow(title, instructions)
-    follow(instructions, workout)
+    follow(instructions, level_1)
+    follow(level_1, workout)
 
     director.run(title)
