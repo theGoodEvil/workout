@@ -55,7 +55,9 @@ class PlayerLayer(cocos.layer.ColorLayer):
             font_size=24,
             color=(0, 0, 0, 255),
             anchor_x='center',
-            anchor_y='center')
+            anchor_y='center'
+        )
+
         self.label.position = (120, 280)
         self.add(self.label)
 
@@ -91,9 +93,35 @@ class WorkoutLayer(cocos.layer.Layer):
         map(self.add, self.player_layers)
 
 
+class TitleLayer(cocos.layer.ColorLayer):
+    is_event_handler = True
+
+    def __init__(self):
+        super(TitleLayer, self).__init__(255, 0, 0, 255)
+        label = cocos.text.Label(
+            'WORKOUT',
+            font_name='8BIT WONDER',
+            font_size=36,
+            color=(255, 255, 255, 255),
+            anchor_x='center',
+            anchor_y='center'
+        )
+
+        label.position = (240, 160)
+        self.add(label)
+
+
 if __name__ == "__main__":
     pyglet.font.add_file('8-bit wonder.ttf')
-    cocos.director.director.init(width=480, height=320)
-    layer = WorkoutLayer()
-    scene = cocos.scene.Scene(layer)
-    cocos.director.director.run(scene)
+    director = cocos.director.director
+    director.init(width=480, height=320)
+
+    title_layer = TitleLayer()
+    title_scene = cocos.scene.Scene(title_layer)
+
+    workout_layer = WorkoutLayer()
+    workout_scene = cocos.scene.Scene(workout_layer)
+
+    title_layer.on_key_press = lambda k, m: director.replace(workout_scene)
+
+    director.run(title_scene)
