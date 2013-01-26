@@ -46,7 +46,7 @@ class InstructorLayer(cocos.layer.ColorLayer):
         self.position = position
 
         self.label = cocos.text.Label(
-            'FASTER',
+            '',
             font_name='8BIT WONDER',
             font_size=24,
             color=(0, 0, 0, 255),
@@ -56,6 +56,9 @@ class InstructorLayer(cocos.layer.ColorLayer):
 
         self.label.position = (120, 280)
         self.add(self.label)
+
+    def set_text(self, text):
+        self.label.element.text = text
 
 
 class HeartbeatLayer(cocos.layer.ColorLayer):
@@ -120,17 +123,22 @@ class PlayerLayer(cocos.layer.Layer):
     def instruct(self, delta_time):
         rate = self.player.pulse.rate()
         if rate < 120:
-            self.show_instructor()
+            self.show_instructor(text="FASTER")
+        elif rate > 140:
+            self.show_instructor(text="SLOW DOWN")
+        else:
+            self.show_instructor(text="PERFECT")
 
-    def show_instructor(self):
-        self.instuctor_layer.visible = True
-        self.heartbeat_layer.visible = False
-        self.schedule_interval(self.hide_instructor, 1)
+    def show_instructor(self, delta_time=0, text=None, show=True):
+        self.unschedule(self.show_instructor)
 
-    def hide_instructor(self, delta_time):
-        self.instuctor_layer.visible = False
-        self.heartbeat_layer.visible = True
-        self.unschedule(self.hide_instructor)
+        if text:
+            self.instuctor_layer.set_text(text)
+
+        self.instuctor_layer.visible = show
+        self.heartbeat_layer.visible = not show
+
+        self.schedule_interval(self.show_instructor, 1, show=False)
 
 
 class WorkoutLayer(cocos.layer.Layer):
@@ -184,7 +192,8 @@ if __name__ == "__main__":
 
     scenes = make_scenes([
         TextLayer("WORKOUT"),
-        TextLayer("HELLO<br/>I AM YOUR INSTRUCTOR"),
+        TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
+        TextLayer("I AM YOUR INSTRUCTOR"),
         TextLayer("WARM UP<br/>120-140 BPM"),
         WorkoutLayer()
     ])
