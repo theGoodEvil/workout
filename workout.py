@@ -5,9 +5,13 @@ import itertools
 import operator
 import time
 
-import cocos
 from cocos.director import director
+from cocos.layer import Layer, ColorLayer
+from cocos.scene import Scene
+from cocos.sprite import Sprite
+from cocos.text import HTMLLabel
 from cocos.utils import SequenceScene
+
 import pyglet
 
 
@@ -61,11 +65,11 @@ class Player(object):
         self.pulse.tick()
 
 
-class InstructorLayer(cocos.layer.Layer):
+class InstructorLayer(Layer):
     def __init__(self):
         super(InstructorLayer, self).__init__()
 
-        self.label = cocos.text.HTMLLabel(
+        self.label = HTMLLabel(
             make_html(""),
             width=240,
             anchor_x="center",
@@ -80,7 +84,7 @@ class InstructorLayer(cocos.layer.Layer):
         self.label.element.text = make_html(text)
 
 
-class HeartbeatLayer(cocos.layer.Layer):
+class HeartbeatLayer(Layer):
     is_event_handler = True
 
     HEART_SIZE_SMALL = 0.2
@@ -91,7 +95,7 @@ class HeartbeatLayer(cocos.layer.Layer):
         super(HeartbeatLayer, self).__init__()
         self.player = player
 
-        self.heart = cocos.sprite.Sprite("heart.png")
+        self.heart = Sprite("heart.png")
         self.heart.position = (120, 120)
         self.heart.scale = self.HEART_SIZE_SMALL
         self.add(self.heart)
@@ -106,11 +110,11 @@ class HeartbeatLayer(cocos.layer.Layer):
         self.heart.scale = self.HEART_SIZE_SMALL
 
 
-class RateLayer(cocos.layer.Layer):
+class RateLayer(Layer):
     def __init__(self, player):
         super(RateLayer, self).__init__()
 
-        self.label = cocos.text.HTMLLabel(
+        self.label = HTMLLabel(
             make_html("0"),
             width=240,
             anchor_x="center",
@@ -127,7 +131,7 @@ class RateLayer(cocos.layer.Layer):
             self.label.element.text = make_html(rate_string)
 
 
-class PlayerLayer(cocos.layer.ColorLayer):
+class PlayerLayer(ColorLayer):
     WORKOUT_COLOR = (22, 232, 247)
     WARNING_COLOR = (255, 0, 0)
 
@@ -165,17 +169,17 @@ class PlayerLayer(cocos.layer.ColorLayer):
         self.show_instructor(show=False)
 
 
-class ProgressBar(cocos.layer.ColorLayer):
+class ProgressBar(ColorLayer):
     def __init__(self):
         super(ProgressBar, self).__init__(128, 128, 128, 255, width=480, height=16)
-        self.progress = cocos.layer.ColorLayer(64, 64, 64, 255, width=0, height=16)
+        self.progress = ColorLayer(64, 64, 64, 255, width=0, height=16)
         self.add(self.progress)
 
     def set_progress(self, progress):
         self.progress.width = int(progress * 480)
 
 
-class WorkoutLayer(cocos.layer.Layer):
+class WorkoutLayer(Layer):
     def __init__(self, make_level):
         super(WorkoutLayer, self).__init__()
 
@@ -196,13 +200,13 @@ class WorkoutLayer(cocos.layer.Layer):
         map(operator.methodcaller("instruct"), self.player_layers)
 
 
-class TextLayer(cocos.layer.ColorLayer):
+class TextLayer(ColorLayer):
     is_event_handler = True
 
     def __init__(self, text):
         super(TextLayer, self).__init__(255, 0, 0, 255)
 
-        label = cocos.text.HTMLLabel(
+        label = HTMLLabel(
             make_html(text, color="white"),
             width=480,
             anchor_x="center",
@@ -256,7 +260,7 @@ if __name__ == "__main__":
     pyglet.font.add_file('8-bit wonder.ttf')
     director.init(width=480, height=320)
 
-    scenes = map(cocos.scene.Scene, [
+    scenes = map(Scene, [
         TextLayer("WORKOUT"),
         TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
         TextLayer("I AM YOUR INSTRUCTOR"),
