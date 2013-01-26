@@ -80,8 +80,6 @@ class PlayerLayer(cocos.layer.ColorLayer):
 
 
 class WorkoutLayer(cocos.layer.Layer):
-    is_event_handler = True
-
     def __init__(self):
         super(WorkoutLayer, self).__init__()
 
