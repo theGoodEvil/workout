@@ -116,10 +116,11 @@ class PlayerLayer(cocos.layer.ColorLayer):
     WORKOUT_COLOR = (22, 232, 247)
     WARNING_COLOR = (255, 0, 0)
 
-    def __init__(self, player, position):
+    def __init__(self, player, level, position):
         super(PlayerLayer, self).__init__(0, 0, 0, 255, width=240, height=320)
         self.color = self.WORKOUT_COLOR
         self.player = player
+        self.level = level
         self.position = position
 
         self.instuctor_layer = InstructorLayer()
@@ -136,12 +137,7 @@ class PlayerLayer(cocos.layer.ColorLayer):
 
     def instruct(self, delta_time):
         rate = self.player.pulse.rate()
-        if rate < 120:
-            self.show_instructor(text="FASTER", color=self.WARNING_COLOR)
-        elif rate > 140:
-            self.show_instructor(text="SLOW DOWN", color=self.WARNING_COLOR)
-        else:
-            self.show_instructor(text="PERFECT")
+        self.level.instruct(rate, self.show_instructor)
 
     def show_instructor(self, text="", show=True, color=WORKOUT_COLOR):
         self.instuctor_layer.set_text(text)
@@ -158,12 +154,12 @@ class PlayerLayer(cocos.layer.ColorLayer):
 
 
 class WorkoutLayer(cocos.layer.Layer):
-    def __init__(self):
+    def __init__(self, level):
         super(WorkoutLayer, self).__init__()
 
         self.player_layers = [
-            PlayerLayer(Player(pyglet.window.key.S), (0, 0)),
-            PlayerLayer(Player(pyglet.window.key.L), (240, 0))
+            PlayerLayer(Player(pyglet.window.key.S), level, (0, 0)),
+            PlayerLayer(Player(pyglet.window.key.L), level, (240, 0))
         ]
 
         map(self.add, self.player_layers)
@@ -190,6 +186,16 @@ class TextLayer(cocos.layer.ColorLayer):
         next_scene()
 
 
+class WarmUp(object):
+    def instruct(self, rate, show_instructor):
+        if rate < 120:
+            show_instructor(text="FASTER", color=PlayerLayer.WARNING_COLOR)
+        elif rate > 140:
+            show_instructor(text="SLOW DOWN", color=PlayerLayer.WARNING_COLOR)
+        else:
+            show_instructor(text="PERFECT")
+
+
 def next_scene():
     director.replace(director.scene.next_scene)
 
@@ -210,7 +216,7 @@ if __name__ == "__main__":
         TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
         TextLayer("I AM YOUR INSTRUCTOR"),
         TextLayer("WARM UP<br/>120-140 BPM"),
-        WorkoutLayer()
+        WorkoutLayer(WarmUp())
     ])
 
     director.run(scenes[0])
