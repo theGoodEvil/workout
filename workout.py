@@ -41,8 +41,10 @@ class Player(object):
 
 class PlayerLayer(cocos.layer.ColorLayer):
     is_event_handler = True
+
     HEART_SIZE_SMALL = 0.2
     HEART_SIZE_BIG = 0.25
+    HEART_BEAT = pyglet.media.load("heartbeat.wav", streaming=False)
 
     def __init__(self, player, position):
         super(PlayerLayer, self).__init__(22, 232, 247, 255, width=240, height=320)
@@ -74,6 +76,7 @@ class PlayerLayer(cocos.layer.ColorLayer):
 
     def on_key_press(self, key, modifiers):
         if key == self.player.key:
+            self.HEART_BEAT.play()
             self.heart.scale = self.HEART_SIZE_BIG
             self.player.trigger()
 
