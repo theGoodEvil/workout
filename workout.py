@@ -2,6 +2,7 @@
 
 import collections
 import itertools
+import operator
 import time
 
 import cocos
@@ -56,7 +57,7 @@ class InstructorLayer(cocos.layer.Layer):
             multiline=True
         )
 
-        self.label.position = (120, 280)
+        self.label.position = (120, 260)
         self.add(self.label)
 
     def set_text(self, text):
@@ -75,7 +76,7 @@ class HeartbeatLayer(cocos.layer.Layer):
         self.player = player
 
         self.heart = cocos.sprite.Sprite("heart.png")
-        self.heart.position = (120, 140)
+        self.heart.position = (120, 120)
         self.heart.scale = self.HEART_SIZE_SMALL
         self.add(self.heart)
 
@@ -102,7 +103,7 @@ class RateLayer(cocos.layer.Layer):
             multiline=True
         )
 
-        self.label.position = (120, 280)
+        self.label.position = (120, 260)
         self.add(self.label)
 
         self.schedule_interval(self.update, 0.2)
@@ -133,9 +134,7 @@ class PlayerLayer(cocos.layer.ColorLayer):
         self.heartbeat_layer = HeartbeatLayer(player)
         self.add(self.heartbeat_layer)
 
-        self.schedule_interval(self.instruct, 4)
-
-    def instruct(self, delta_time):
+    def instruct(self):
         rate = self.player.pulse.rate()
         self.level.instruct(rate, self.show_instructor)
 
@@ -154,15 +153,19 @@ class PlayerLayer(cocos.layer.ColorLayer):
 
 
 class WorkoutLayer(cocos.layer.Layer):
-    def __init__(self, level):
+    def __init__(self, make_level):
         super(WorkoutLayer, self).__init__()
 
         self.player_layers = [
-            PlayerLayer(Player(pyglet.window.key.S), level, (0, 0)),
-            PlayerLayer(Player(pyglet.window.key.L), level, (240, 0))
+            PlayerLayer(Player(pyglet.window.key.S), make_level(), (0, 0)),
+            PlayerLayer(Player(pyglet.window.key.L), make_level(), (240, 0))
         ]
 
         map(self.add, self.player_layers)
+        self.schedule_interval(self.instruct, 4)
+
+    def instruct(self, delta_time):
+        map(operator.methodcaller("instruct"), self.player_layers)
 
 
 class TextLayer(cocos.layer.ColorLayer):
@@ -187,11 +190,31 @@ class TextLayer(cocos.layer.ColorLayer):
 
 
 class WarmUp(object):
+    def __init__(self):
+        self.slow_warnings = collections.deque([
+            "FASTER",
+            "ARE YOU KIDDING ME",
+            "MAN UP"
+        ])
+
+        self.fast_warnings = collections.deque([
+            "SLOW DOWN",
+            "EASY"
+        ])
+
     def instruct(self, rate, show_instructor):
         if rate < 120:
-            show_instructor(text="FASTER", color=PlayerLayer.WARNING_COLOR)
+            show_instructor(
+                text=self.slow_warnings[0],
+                color=PlayerLayer.WARNING_COLOR
+            )
+            self.slow_warnings.rotate(-1)
         elif rate > 140:
-            show_instructor(text="SLOW DOWN", color=PlayerLayer.WARNING_COLOR)
+            show_instructor(
+                text=self.fast_warnings[0],
+                color=PlayerLayer.WARNING_COLOR
+            )
+            self.fast_warnings.rotate(-1)
         else:
             show_instructor(text="PERFECT")
 
@@ -216,7 +239,7 @@ if __name__ == "__main__":
         TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
         TextLayer("I AM YOUR INSTRUCTOR"),
         TextLayer("WARM UP<br/>120-140 BPM"),
-        WorkoutLayer(WarmUp())
+        WorkoutLayer(WarmUp)
     ])
 
     director.run(scenes[0])
