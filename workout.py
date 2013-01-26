@@ -15,6 +15,10 @@ def pairwise(iterable):
     return itertools.izip(a, b)
 
 
+def make_html(text, color="black"):
+    return '<center><h1><font face="8BIT WONDER" color="%s">%s</font></h1></center>' % (color, text)
+
+
 class Pulse(object):
     def __init__(self, num_events=4):
         self.num_events = num_events
@@ -40,61 +44,40 @@ class Player(object):
         self.pulse.tick()
 
 
-class InstructorLayer(cocos.layer.ColorLayer):
-    def __init__(self, position):
-        super(InstructorLayer, self).__init__(255, 0, 0, 255, width=240, height=320)
-        self.position = position
+class InstructorLayer(cocos.layer.Layer):
+    def __init__(self):
+        super(InstructorLayer, self).__init__()
 
-        self.label = cocos.text.Label(
-            '',
-            font_name='8BIT WONDER',
-            font_size=24,
-            color=(0, 0, 0, 255),
-            anchor_x='center',
-            anchor_y='center'
+        self.label = cocos.text.HTMLLabel(
+            make_html(""),
+            width=240,
+            anchor_x="center",
+            anchor_y="center",
+            multiline=True
         )
 
         self.label.position = (120, 280)
         self.add(self.label)
 
     def set_text(self, text):
-        self.label.element.text = text
+        self.label.element.text = make_html(text)
 
 
-class HeartbeatLayer(cocos.layer.ColorLayer):
+class HeartbeatLayer(cocos.layer.Layer):
     is_event_handler = True
 
     HEART_SIZE_SMALL = 0.2
     HEART_SIZE_BIG = 0.25
     HEART_BEAT = pyglet.media.load("heartbeat.wav", streaming=False)
 
-    def __init__(self, player, position):
-        super(HeartbeatLayer, self).__init__(22, 232, 247, 255, width=240, height=320)
+    def __init__(self, player):
+        super(HeartbeatLayer, self).__init__()
         self.player = player
-        self.position = position
-
-        self.label = cocos.text.Label(
-            '',
-            font_name='8BIT WONDER',
-            font_size=24,
-            color=(0, 0, 0, 255),
-            anchor_x='center',
-            anchor_y='center'
-        )
-
-        self.label.position = (120, 280)
-        self.add(self.label)
 
         self.heart = cocos.sprite.Sprite("heart.png")
         self.heart.position = (120, 140)
         self.heart.scale = self.HEART_SIZE_SMALL
         self.add(self.heart)
-
-        self.schedule_interval(self.update, 0.2)
-
-    def update(self, delta_time):
-        rate = "%3.0f" % (self.player.pulse.rate())
-        self.label.element.text = rate
 
     def on_key_press(self, key, modifiers):
         if key == self.player.key:
@@ -106,16 +89,47 @@ class HeartbeatLayer(cocos.layer.ColorLayer):
         self.heart.scale = self.HEART_SIZE_SMALL
 
 
-class PlayerLayer(cocos.layer.Layer):
-    def __init__(self, player, position):
-        super(PlayerLayer, self).__init__()
+class RateLayer(cocos.layer.Layer):
+    def __init__(self, player):
+        super(RateLayer, self).__init__()
         self.player = player
 
-        self.instuctor_layer = InstructorLayer(position)
+        self.label = cocos.text.HTMLLabel(
+            "",
+            width=240,
+            anchor_x="center",
+            anchor_y="center",
+            multiline=True
+        )
+
+        self.label.position = (120, 280)
+        self.add(self.label)
+
+        self.schedule_interval(self.update, 0.2)
+
+    def update(self, delta_time):
+        rate = "%3.0f" % (self.player.pulse.rate())
+        self.label.element.text = make_html(rate)
+
+
+class PlayerLayer(cocos.layer.ColorLayer):
+    WORKOUT_COLOR = (22, 232, 247)
+    WARNING_COLOR = (255, 0, 0)
+
+    def __init__(self, player, position):
+        super(PlayerLayer, self).__init__(0, 0, 0, 255, width=240, height=320)
+        self.color = self.WORKOUT_COLOR
+        self.player = player
+        self.position = position
+
+        self.instuctor_layer = InstructorLayer()
         self.instuctor_layer.visible = False
         self.add(self.instuctor_layer)
 
-        self.heartbeat_layer = HeartbeatLayer(player, position)
+        self.rate_layer = RateLayer(player)
+        self.add(self.rate_layer)
+
+        self.heartbeat_layer = HeartbeatLayer(player)
         self.add(self.heartbeat_layer)
 
         self.schedule_interval(self.instruct, 4)
@@ -123,22 +137,24 @@ class PlayerLayer(cocos.layer.Layer):
     def instruct(self, delta_time):
         rate = self.player.pulse.rate()
         if rate < 120:
-            self.show_instructor(text="FASTER")
+            self.show_instructor(text="FASTER", color=self.WARNING_COLOR)
         elif rate > 140:
-            self.show_instructor(text="SLOW DOWN")
+            self.show_instructor(text="SLOW DOWN", color=self.WARNING_COLOR)
         else:
             self.show_instructor(text="PERFECT")
 
-    def show_instructor(self, delta_time=0, text=None, show=True):
-        self.unschedule(self.show_instructor)
-
-        if text:
-            self.instuctor_layer.set_text(text)
-
+    def show_instructor(self, text="", show=True, color=WORKOUT_COLOR):
+        self.instuctor_layer.set_text(text)
         self.instuctor_layer.visible = show
-        self.heartbeat_layer.visible = not show
+        self.rate_layer.visible = not show
+        self.color = color
 
-        self.schedule_interval(self.show_instructor, 1, show=False)
+        if show:
+            self.schedule_interval(self.hide_instructor, 1)
+
+    def hide_instructor(self, delta_time):
+        self.unschedule(self.hide_instructor)
+        self.show_instructor(show=False)
 
 
 class WorkoutLayer(cocos.layer.Layer):
@@ -159,12 +175,11 @@ class TextLayer(cocos.layer.ColorLayer):
     def __init__(self, text):
         super(TextLayer, self).__init__(255, 0, 0, 255)
 
-        html = '<center><h1><font face="8BIT WONDER" color="white">%s</font></h1></center>' % text
         label = cocos.text.HTMLLabel(
-            html,
+            make_html(text, color="white"),
             width=480,
-            anchor_x='center',
-            anchor_y='center',
+            anchor_x="center",
+            anchor_y="center",
             multiline=True
         )
 
