@@ -96,22 +96,33 @@ class WorkoutLayer(cocos.layer.Layer):
         map(self.add, self.player_layers)
 
 
-class TitleLayer(cocos.layer.ColorLayer):
+class TextLayer(cocos.layer.ColorLayer):
     is_event_handler = True
 
-    def __init__(self):
-        super(TitleLayer, self).__init__(255, 0, 0, 255)
-        label = cocos.text.Label(
-            'WORKOUT',
-            font_name='8BIT WONDER',
-            font_size=36,
-            color=(255, 255, 255, 255),
+    def __init__(self, text, color=(255, 0, 0, 255)):
+        super(TextLayer, self).__init__(*color)
+
+        html = '<center><h1><font face="8BIT WONDER" color="white">%s</font></h1></center>' % text
+        label = cocos.text.HTMLLabel(
+            html,
+            width=480,
             anchor_x='center',
-            anchor_y='center'
+            anchor_y='center',
+            multiline=True
         )
 
         label.position = (240, 160)
         self.add(label)
+
+
+def make_scene(layer):
+    scene = cocos.scene.Scene(layer)
+    return scene
+
+
+def follow(scene, next_scene):
+    layer = scene.get_children()[0]
+    layer.on_key_press = lambda k, m: director.replace(next_scene)
 
 
 if __name__ == "__main__":
@@ -119,12 +130,11 @@ if __name__ == "__main__":
     director = cocos.director.director
     director.init(width=480, height=320)
 
-    title_layer = TitleLayer()
-    title_scene = cocos.scene.Scene(title_layer)
+    title = make_scene(TextLayer("WORKOUT"))
+    instructions = make_scene(TextLayer("Hello!<br/>My name is Arnold."))
+    workout = make_scene(WorkoutLayer())
 
-    workout_layer = WorkoutLayer()
-    workout_scene = cocos.scene.Scene(workout_layer)
+    follow(title, instructions)
+    follow(instructions, workout)
 
-    title_layer.on_key_press = lambda k, m: director.replace(workout_scene)
-
-    director.run(title_scene)
+    director.run(title)
