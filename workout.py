@@ -180,9 +180,12 @@ class ProgressBar(ColorLayer):
 
 
 class WorkoutLayer(Layer):
+    is_event_handler = True
+
     def __init__(self, level_class):
         super(WorkoutLayer, self).__init__()
         self.level_class = level_class
+        self.is_complete = False
 
         self.player_layers = [
             PlayerLayer(Player(pyglet.window.key.S), level_class(), (0, 0)),
@@ -199,9 +202,14 @@ class WorkoutLayer(Layer):
         map(operator.methodcaller("instruct"), self.player_layers)
 
     def complete(self, delta_time):
+        self.is_complete = True
         self.unschedule(self.instruct)
         self.unschedule(self.complete)
         map(operator.methodcaller("show_score"), self.player_layers)
+
+    def on_key_press(self, key, modifiers):
+        if self.is_complete and key == pyglet.window.key.SPACE:
+            director.pop()
 
 
 class TextLayer(ColorLayer):
