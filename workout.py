@@ -305,8 +305,8 @@ if __name__ == "__main__":
         TextLayer("LEVEL 1<br/>120-140 BPM"),
         WorkoutLayer(Level, [120, 140]),
         TextLayer("COME ON<br/>MORE ENERGY"),
-        TextLayer("LEVEL 2<br/>190-210 BPM"),
-        WorkoutLayer(Level, [190, 210]),
+        TextLayer("LEVEL 2<br/>OVER 200 BPM"),
+        WorkoutLayer(Level, [200, 1000]),
         TextLayer("NOW TAKE A SHOWER")
     ])
 
