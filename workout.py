@@ -260,10 +260,44 @@ class Level(object):
 
 
 class WarmUp(Level):
-    time = 10
+    time = 30
 
     def __init__(self):
         super(WarmUp, self).__init__()
+        self.slow_warnings = collections.deque([
+            "FASTER",
+            "ARE YOU KIDDING ME",
+            "MAN UP"
+        ])
+
+        self.fast_warnings = collections.deque([
+            "SLOW DOWN",
+            "EASY"
+        ])
+
+    def instruct(self, rate, show_instructor):
+        if rate < 70:
+            show_instructor(
+                text=self.slow_warnings[0],
+                color=PlayerLayer.WARNING_COLOR
+            )
+            self.slow_warnings.rotate(-1)
+        elif rate > 90:
+            show_instructor(
+                text=self.fast_warnings[0],
+                color=PlayerLayer.WARNING_COLOR
+            )
+            self.fast_warnings.rotate(-1)
+        else:
+            self.score += 1
+            show_instructor(text="PERFECT")
+
+
+class Level1(Level):
+    time = 30
+
+    def __init__(self):
+        super(Level1, self).__init__()
         self.slow_warnings = collections.deque([
             "FASTER",
             "ARE YOU KIDDING ME",
@@ -301,8 +335,11 @@ if __name__ == "__main__":
         TextLayer("WORKOUT"),
         TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
         TextLayer("I AM YOUR INSTRUCTOR"),
-        TextLayer("WARM UP<br/>120-140 BPM"),
-        WorkoutLayer(WarmUp)
+        TextLayer("WARM UP<br/>70-90 BPM"),
+        WorkoutLayer(WarmUp),
+        TextLayer("ALL RIGHT<br/>NOW LETS GET SERIOUS"),
+        TextLayer("LEVEL 1<br/>120-140 BPM"),
+        WorkoutLayer(Level1)
     ])
 
     # workaround for pyglet refresh issue
