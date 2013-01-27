@@ -16,6 +16,9 @@ from cocos.utils import SequenceScene
 import pyglet
 
 
+INSTRUCTOR_INTERVAL = 4
+
+
 def pairwise(iterable):
     a, b = itertools.tee(iterable)
     next(b, None)
@@ -189,7 +192,7 @@ class WorkoutLayer(Layer):
         map(self.add, self.player_layers)
         self.add(ProgressBar(level_class.time))
 
-        self.schedule_interval(self.instruct, 4)
+        self.schedule_interval(self.instruct, INSTRUCTOR_INTERVAL)
         self.schedule_interval(self.complete, level_class.time)
 
     def instruct(self, delta_time):
@@ -223,11 +226,19 @@ class TextLayer(ColorLayer):
 
 
 class Level(object):
+    scores = [
+        "LOSER",
+        "OK",
+        "GREAT"
+    ]
+
     def __init__(self):
         self.score = 0
 
     def get_score(self):
-        raise NotImplementedError
+        max_score = self.time / INSTRUCTOR_INTERVAL
+        score_index = (len(self.scores) - 1) * self.score / max_score
+        return self.scores[score_index]
 
     def instruct(self, rate, show_instructor):
         raise NotImplementedError
@@ -235,11 +246,6 @@ class Level(object):
 
 class WarmUp(Level):
     time = 10
-    scores = [
-        "LOSER",
-        "OK",
-        "GREAT"
-    ]
 
     def __init__(self):
         super(WarmUp, self).__init__()
@@ -270,9 +276,6 @@ class WarmUp(Level):
         else:
             self.score += 1
             show_instructor(text="PERFECT")
-
-    def get_score(self):
-        return self.scores[self.score]
 
 
 if __name__ == "__main__":
