@@ -289,7 +289,7 @@ class Level(object):
 
 
 if __name__ == "__main__":
-    pyglet.font.add_file('8-bit wonder.ttf')
+    pyglet.font.add_file("font/8-bit wonder.ttf")
     director.init(width=480, height=320)
 
     scenes = map(Scene, [
@@ -304,7 +304,7 @@ if __name__ == "__main__":
         TextLayer("COME ON<br/>MORE ENERGY"),
         TextLayer("LEVEL 2<br/>190-210 BPM"),
         WorkoutLayer(Level, [190, 210]),
-        TextLayer("GO HOME NOW")
+        TextLayer("NOW TAKE A SHOWER")
     ])
 
     # workaround for pyglet refresh issue
