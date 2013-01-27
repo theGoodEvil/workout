@@ -222,7 +222,8 @@ class TextLayer(ColorLayer):
         self.add(label)
 
     def on_key_press(self, key, modifiers):
-        director.pop()
+        if key == pyglet.window.key.SPACE:
+            director.pop()
 
 
 class Level(object):
