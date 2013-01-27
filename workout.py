@@ -66,9 +66,9 @@ class Player(object):
         self.pulse.tick()
 
 
-class InstructorLayer(Layer):
+class MessageLayer(Layer):
     def __init__(self):
-        super(InstructorLayer, self).__init__()
+        super(MessageLayer, self).__init__()
 
         self.label = HTMLLabel(
             make_html(""),
@@ -111,25 +111,13 @@ class HeartbeatLayer(Layer):
         self.heart.scale = self.HEART_SIZE_SMALL
 
 
-class RateLayer(Layer):
+class RateLayer(MessageLayer):
     def __init__(self, player):
         super(RateLayer, self).__init__()
 
-        self.label = HTMLLabel(
-            make_html("0"),
-            width=240,
-            anchor_x="center",
-            anchor_y="center",
-            multiline=True
-        )
-
-        self.label.position = (120, 260)
-        self.add(self.label)
-
         @player.pulse.event
         def on_rate_changed(rate):
-            rate_string = "%3.0f" % rate
-            self.label.element.text = make_html(rate_string)
+            self.set_text("%3.0f" % rate)
 
 
 class PlayerLayer(ColorLayer):
@@ -143,9 +131,9 @@ class PlayerLayer(ColorLayer):
         self.level = level
         self.position = position
 
-        self.instuctor_layer = InstructorLayer()
-        self.instuctor_layer.visible = False
-        self.add(self.instuctor_layer)
+        self.instructor_layer = MessageLayer()
+        self.instructor_layer.visible = False
+        self.add(self.instructor_layer)
 
         self.rate_layer = RateLayer(player)
         self.add(self.rate_layer)
@@ -158,8 +146,8 @@ class PlayerLayer(ColorLayer):
         self.level.instruct(rate, self.show_instructor)
 
     def show_instructor(self, text="", show=True, color=WORKOUT_COLOR):
-        self.instuctor_layer.set_text(text)
-        self.instuctor_layer.visible = show
+        self.instructor_layer.set_text(text)
+        self.instructor_layer.visible = show
         self.rate_layer.visible = not show
         self.color = color
 
@@ -168,6 +156,15 @@ class PlayerLayer(ColorLayer):
 
     def hide_instructor(self, delta_time):
         self.show_instructor(show=False)
+
+    def show_score(self):
+        self.show_instructor(show=False)
+        self.remove(self.rate_layer)
+        self.remove(self.heartbeat_layer)
+        self.remove(self.instructor_layer)
+        score_layer = MessageLayer()
+        score_layer.set_text(self.level.get_score())
+        self.add(score_layer)
 
 
 class ProgressBar(ColorLayer):
@@ -191,6 +188,7 @@ class WorkoutLayer(Layer):
 
         map(self.add, self.player_layers)
         self.add(ProgressBar(level_class.time))
+
         self.schedule_interval(self.instruct, 4)
         self.schedule_interval(self.complete, level_class.time)
 
@@ -198,7 +196,9 @@ class WorkoutLayer(Layer):
         map(operator.methodcaller("instruct"), self.player_layers)
 
     def complete(self, delta_time):
-        director.pop()
+        self.unschedule(self.instruct)
+        self.unschedule(self.complete)
+        map(operator.methodcaller("show_score"), self.player_layers)
 
 
 class TextLayer(ColorLayer):
@@ -223,14 +223,26 @@ class TextLayer(ColorLayer):
 
 
 class Level(object):
+    def __init__(self):
+        self.score = 0
+
+    def get_score(self):
+        raise NotImplementedError
+
     def instruct(self, rate, show_instructor):
         raise NotImplementedError
 
 
 class WarmUp(Level):
-    time = 30
+    time = 10
+    scores = [
+        "LOSER",
+        "OK",
+        "GREAT"
+    ]
 
     def __init__(self):
+        super(WarmUp, self).__init__()
         self.slow_warnings = collections.deque([
             "FASTER",
             "ARE YOU KIDDING ME",
@@ -256,7 +268,11 @@ class WarmUp(Level):
             )
             self.fast_warnings.rotate(-1)
         else:
+            self.score += 1
             show_instructor(text="PERFECT")
+
+    def get_score(self):
+        return self.scores[self.score]
 
 
 if __name__ == "__main__":
