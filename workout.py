@@ -16,6 +16,8 @@ from cocos.utils import SequenceScene
 import pyglet
 
 
+PLAYER_ONE_KEY = pyglet.window.key.LEFT
+PLAYER_TWO_KEY = pyglet.window.key.RIGHT
 INSTRUCTOR_INTERVAL = 4
 
 
@@ -98,6 +100,7 @@ class HeartbeatLayer(Layer):
     def __init__(self, player):
         super(HeartbeatLayer, self).__init__()
         self.player = player
+        self.key_is_pressed = False
 
         self.heart = Sprite("heart.png")
         self.heart.position = (120, 120)
@@ -105,13 +108,16 @@ class HeartbeatLayer(Layer):
         self.add(self.heart)
 
     def on_key_press(self, key, modifiers):
-        if key == self.player.key:
+        if key == self.player.key and not self.key_is_pressed:
+            self.key_is_pressed = True
             self.HEART_BEAT.play()
             self.heart.scale = self.HEART_SIZE_BIG
             self.player.trigger()
 
     def on_key_release(self, key, modifiers):
-        self.heart.scale = self.HEART_SIZE_SMALL
+        if key == self.player.key:
+            self.key_is_pressed = False
+            self.heart.scale = self.HEART_SIZE_SMALL
 
 
 class RateLayer(MessageLayer):
@@ -188,8 +194,8 @@ class WorkoutLayer(Layer):
         self.is_complete = False
 
         self.player_layers = [
-            PlayerLayer(Player(pyglet.window.key.S), level_class(), (0, 0)),
-            PlayerLayer(Player(pyglet.window.key.L), level_class(), (240, 0))
+            PlayerLayer(Player(PLAYER_ONE_KEY), level_class(), (0, 0)),
+            PlayerLayer(Player(PLAYER_TWO_KEY), level_class(), (240, 0))
         ]
 
         map(self.add, self.player_layers)
