@@ -191,7 +191,7 @@ class ProgressBar(ColorLayer):
 class WorkoutLayer(Layer):
     is_event_handler = True
 
-    def __init__(self, level_class, level_args):
+    def __init__(self, level_class, level_args, sound):
         super(WorkoutLayer, self).__init__()
         self.level_class = level_class
         self.is_complete = False
@@ -207,14 +207,23 @@ class WorkoutLayer(Layer):
         self.schedule_interval(self.instruct, INSTRUCTOR_INTERVAL)
         self.schedule_interval(self.complete, level_class.time)
 
+        self.player = pyglet.media.Player()
+        self.player.eos_action = pyglet.media.Player.EOS_LOOP
+        self.player.queue(pyglet.media.load(sound, streaming=False))
+
     def instruct(self, delta_time):
         map(operator.methodcaller("instruct"), self.player_layers)
 
     def complete(self, delta_time):
         self.is_complete = True
+        self.player.pause()
         self.unschedule(self.instruct)
         self.unschedule(self.complete)
         map(operator.methodcaller("show_score"), self.player_layers)
+
+    def on_enter(self):
+        super(WorkoutLayer, self).on_enter()
+        self.player.play()
 
     def on_key_press(self, key, modifiers):
         if self.is_complete and key == pyglet.window.key.SPACE:
@@ -299,14 +308,14 @@ if __name__ == "__main__":
         TextLayer("WORKOUT"),
         TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
         TextLayer("I AM YOUR INSTRUCTOR"),
-        TextLayer("WARM UP<br/>70-90 BPM"),
-        WorkoutLayer(Level, [70, 90]),
+        TextLayer("WARM UP<br/>80-100 BPM"),
+        WorkoutLayer(Level, [80, 100], "sound/loop90.wav"),
         TextLayer("ALL RIGHT<br/>NOW LETS GET SERIOUS"),
         TextLayer("LEVEL 1<br/>120-140 BPM"),
-        WorkoutLayer(Level, [120, 140]),
+        WorkoutLayer(Level, [120, 140], "sound/loop130.wav"),
         TextLayer("COME ON<br/>MORE ENERGY"),
         TextLayer("LEVEL 2<br/>OVER 200 BPM"),
-        WorkoutLayer(Level, [200, 1000]),
+        WorkoutLayer(Level, [200, 1000], "sound/loop220.wav"),
         TextLayer("NOW TAKE A SHOWER")
     ])
 
