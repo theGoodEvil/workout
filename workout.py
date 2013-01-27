@@ -188,14 +188,14 @@ class ProgressBar(ColorLayer):
 class WorkoutLayer(Layer):
     is_event_handler = True
 
-    def __init__(self, level_class):
+    def __init__(self, level_class, level_args):
         super(WorkoutLayer, self).__init__()
         self.level_class = level_class
         self.is_complete = False
 
         self.player_layers = [
-            PlayerLayer(Player(PLAYER_ONE_KEY), level_class(), (0, 0)),
-            PlayerLayer(Player(PLAYER_TWO_KEY), level_class(), (240, 0))
+            PlayerLayer(Player(PLAYER_ONE_KEY), level_class(*level_args), (0, 0)),
+            PlayerLayer(Player(PLAYER_TWO_KEY), level_class(*level_args), (240, 0))
         ]
 
         map(self.add, self.player_layers)
@@ -241,14 +241,29 @@ class TextLayer(ColorLayer):
 
 
 class Level(object):
+    time = 30
+
     scores = [
         "LOSER",
         "OK",
         "GREAT"
     ]
 
-    def __init__(self):
+    def __init__(self, min_rate, max_rate):
+        self.min_rate = min_rate
+        self.max_rate = max_rate
         self.score = 0
+
+        self.slow_warnings = collections.deque([
+            "FASTER",
+            "ARE YOU KIDDING ME",
+            "MORE ENERGY"
+        ])
+
+        self.fast_warnings = collections.deque([
+            "SLOW DOWN",
+            "EASY"
+        ])
 
     def get_score(self):
         max_score = self.time / INSTRUCTOR_INTERVAL
@@ -256,67 +271,13 @@ class Level(object):
         return self.scores[score_index]
 
     def instruct(self, rate, show_instructor):
-        raise NotImplementedError
-
-
-class WarmUp(Level):
-    time = 30
-
-    def __init__(self):
-        super(WarmUp, self).__init__()
-        self.slow_warnings = collections.deque([
-            "FASTER",
-            "ARE YOU KIDDING ME",
-            "MAN UP"
-        ])
-
-        self.fast_warnings = collections.deque([
-            "SLOW DOWN",
-            "EASY"
-        ])
-
-    def instruct(self, rate, show_instructor):
-        if rate < 70:
+        if rate < self.min_rate:
             show_instructor(
                 text=self.slow_warnings[0],
                 color=PlayerLayer.WARNING_COLOR
             )
             self.slow_warnings.rotate(-1)
-        elif rate > 90:
-            show_instructor(
-                text=self.fast_warnings[0],
-                color=PlayerLayer.WARNING_COLOR
-            )
-            self.fast_warnings.rotate(-1)
-        else:
-            self.score += 1
-            show_instructor(text="PERFECT")
-
-
-class Level1(Level):
-    time = 30
-
-    def __init__(self):
-        super(Level1, self).__init__()
-        self.slow_warnings = collections.deque([
-            "FASTER",
-            "ARE YOU KIDDING ME",
-            "MAN UP"
-        ])
-
-        self.fast_warnings = collections.deque([
-            "SLOW DOWN",
-            "EASY"
-        ])
-
-    def instruct(self, rate, show_instructor):
-        if rate < 120:
-            show_instructor(
-                text=self.slow_warnings[0],
-                color=PlayerLayer.WARNING_COLOR
-            )
-            self.slow_warnings.rotate(-1)
-        elif rate > 140:
+        elif rate > self.max_rate:
             show_instructor(
                 text=self.fast_warnings[0],
                 color=PlayerLayer.WARNING_COLOR
@@ -336,10 +297,14 @@ if __name__ == "__main__":
         TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
         TextLayer("I AM YOUR INSTRUCTOR"),
         TextLayer("WARM UP<br/>70-90 BPM"),
-        WorkoutLayer(WarmUp),
+        WorkoutLayer(Level, [70, 90]),
         TextLayer("ALL RIGHT<br/>NOW LETS GET SERIOUS"),
         TextLayer("LEVEL 1<br/>120-140 BPM"),
-        WorkoutLayer(Level1)
+        WorkoutLayer(Level, [120, 140]),
+        TextLayer("COME ON<br/>MORE ENERGY"),
+        TextLayer("LEVEL 2<br/>190-210 BPM"),
+        WorkoutLayer(Level, [190, 210]),
+        TextLayer("GO HOME NOW")
     ])
 
     # workaround for pyglet refresh issue
