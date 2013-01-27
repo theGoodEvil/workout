@@ -98,7 +98,7 @@ class HeartbeatLayer(Layer):
 
     HEART_SIZE_SMALL = WIDTH / 2400.0
     HEART_SIZE_BIG = 1.25 * HEART_SIZE_SMALL
-    HEART_BEAT = pyglet.media.load("heartbeat.wav", streaming=False)
+    HEART_BEAT = pyglet.media.load("sound/heartbeat.wav", streaming=False)
 
     def __init__(self, player):
         super(HeartbeatLayer, self).__init__()
