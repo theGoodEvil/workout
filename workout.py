@@ -20,6 +20,9 @@ PLAYER_ONE_KEY = pyglet.window.key.LEFT
 PLAYER_TWO_KEY = pyglet.window.key.RIGHT
 INSTRUCTOR_INTERVAL = 4
 
+WIDTH = 1920
+HEIGHT = 1200
+
 
 def pairwise(iterable):
     a, b = itertools.tee(iterable)
@@ -28,7 +31,7 @@ def pairwise(iterable):
 
 
 def make_html(text, color="black"):
-    return '<center><h1><font face="8BIT WONDER" color="%s">%s</font></h1></center>' % (color, text)
+    return '<center><font size="7" face="8BIT WONDER" color="%s">%s</font></center>' % (color, text)
 
 
 class Pulse(pyglet.event.EventDispatcher):
@@ -77,13 +80,13 @@ class MessageLayer(Layer):
 
         self.label = HTMLLabel(
             make_html(""),
-            width=240,
+            width=WIDTH / 2,
             anchor_x="center",
             anchor_y="center",
             multiline=True
         )
 
-        self.label.position = (120, 260)
+        self.label.position = (WIDTH / 4, HEIGHT * 7 / 8)
         self.add(self.label)
 
     def set_text(self, text):
@@ -93,8 +96,8 @@ class MessageLayer(Layer):
 class HeartbeatLayer(Layer):
     is_event_handler = True
 
-    HEART_SIZE_SMALL = 0.2
-    HEART_SIZE_BIG = 0.25
+    HEART_SIZE_SMALL = WIDTH / 2400.0
+    HEART_SIZE_BIG = 1.25 * HEART_SIZE_SMALL
     HEART_BEAT = pyglet.media.load("heartbeat.wav", streaming=False)
 
     def __init__(self, player):
@@ -103,7 +106,7 @@ class HeartbeatLayer(Layer):
         self.key_is_pressed = False
 
         self.heart = Sprite("heart.png")
-        self.heart.position = (120, 120)
+        self.heart.position = (WIDTH / 4, HEIGHT / 2)
         self.heart.scale = self.HEART_SIZE_SMALL
         self.add(self.heart)
 
@@ -134,7 +137,7 @@ class PlayerLayer(ColorLayer):
     WARNING_COLOR = (255, 0, 0)
 
     def __init__(self, player, level, position):
-        super(PlayerLayer, self).__init__(0, 0, 0, 255, width=240, height=320)
+        super(PlayerLayer, self).__init__(0, 0, 0, 255, width=WIDTH / 2, height=HEIGHT)
         self.color = self.WORKOUT_COLOR
         self.player = player
         self.level = level
@@ -178,10 +181,10 @@ class PlayerLayer(ColorLayer):
 
 class ProgressBar(ColorLayer):
     def __init__(self, duration):
-        super(ProgressBar, self).__init__(64, 64, 64, 255, width=480, height=16)
+        super(ProgressBar, self).__init__(64, 64, 64, 255, width=WIDTH, height=HEIGHT / 20)
 
-        self.bar = ColorLayer(128, 128, 128, 255, width=480, height=16)
-        self.bar.do(MoveBy((480, 0), duration))
+        self.bar = ColorLayer(128, 128, 128, 255, width=WIDTH, height=HEIGHT / 20)
+        self.bar.do(MoveBy((WIDTH, 0), duration))
         self.add(self.bar)
 
 
@@ -195,7 +198,7 @@ class WorkoutLayer(Layer):
 
         self.player_layers = [
             PlayerLayer(Player(PLAYER_ONE_KEY), level_class(*level_args), (0, 0)),
-            PlayerLayer(Player(PLAYER_TWO_KEY), level_class(*level_args), (240, 0))
+            PlayerLayer(Player(PLAYER_TWO_KEY), level_class(*level_args), (WIDTH / 2, 0))
         ]
 
         map(self.add, self.player_layers)
@@ -226,13 +229,13 @@ class TextLayer(ColorLayer):
 
         label = HTMLLabel(
             make_html(text, color="white"),
-            width=480,
+            width=WIDTH,
             anchor_x="center",
             anchor_y="center",
             multiline=True
         )
 
-        label.position = (240, 160)
+        label.position = (WIDTH / 2, HEIGHT / 2)
         self.add(label)
 
     def on_key_press(self, key, modifiers):
@@ -290,7 +293,7 @@ class Level(object):
 
 if __name__ == "__main__":
     pyglet.font.add_file("font/8-bit wonder.ttf")
-    director.init(width=480, height=320)
+    director.init(width=WIDTH, height=HEIGHT, fullscreen=True)
 
     scenes = map(Scene, [
         TextLayer("WORKOUT"),
