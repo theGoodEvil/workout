@@ -210,23 +210,23 @@ class WorkoutLayer(Layer):
         self.schedule_interval(self.instruct, INSTRUCTOR_INTERVAL)
         self.schedule_interval(self.complete, level_class.time)
 
-        self.player = pyglet.media.Player()
-        self.player.eos_action = pyglet.media.Player.EOS_LOOP
-        self.player.queue(pyglet.media.load(sound, streaming=False))
+        self.audio_player = pyglet.media.Player()
+        self.audio_player.eos_action = pyglet.media.Player.EOS_LOOP
+        self.audio_player.queue(pyglet.media.load(sound, streaming=False))
 
     def instruct(self, delta_time):
         map(operator.methodcaller("instruct"), self.player_layers)
 
     def complete(self, delta_time):
         self.is_complete = True
-        self.player.pause()
+        self.audio_player.pause()
         self.unschedule(self.instruct)
         self.unschedule(self.complete)
         map(operator.methodcaller("show_score"), self.player_layers)
 
     def on_enter(self):
         super(WorkoutLayer, self).on_enter()
-        self.player.play()
+        self.audio_player.play()
 
     def on_key_press(self, key, modifiers):
         if self.is_complete and key == pyglet.window.key.SPACE:
