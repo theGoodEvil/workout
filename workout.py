@@ -9,6 +9,7 @@ from cocos.actions import MoveBy
 from cocos.director import director
 from cocos.layer import Layer, ColorLayer
 from cocos.scene import Scene
+from cocos.scenes.transitions import SlideInRTransition
 from cocos.sprite import Sprite
 from cocos.text import HTMLLabel
 from cocos.utils import SequenceScene
@@ -22,6 +23,8 @@ INSTRUCTOR_INTERVAL = 4
 
 WIDTH = 1920
 HEIGHT = 1200
+
+sceneManager = None
 
 
 def pairwise(iterable):
@@ -227,7 +230,7 @@ class WorkoutLayer(Layer):
 
     def on_key_press(self, key, modifiers):
         if self.is_complete and key == pyglet.window.key.SPACE:
-            director.pop()
+            sceneManager.next_scene()
 
 
 class TextLayer(ColorLayer):
@@ -249,7 +252,7 @@ class TextLayer(ColorLayer):
 
     def on_key_press(self, key, modifiers):
         if key == pyglet.window.key.SPACE:
-            director.pop()
+            sceneManager.next_scene()
 
 
 class Level(object):
@@ -301,6 +304,19 @@ class Level(object):
             show_instructor(text="PERFECT")
 
 
+class SceneManager(object):
+    def __init__(self, scenes):
+        self.scenes = scenes
+        self.current_scene_id = 0
+
+    def current_scene(self):
+        return self.scenes[self.current_scene_id]
+
+    def next_scene(self):
+        self.current_scene_id = (self.current_scene_id + 1) % len(self.scenes)
+        director.replace(SlideInRTransition(self.current_scene(), duration=0.1))
+
+
 if __name__ == "__main__":
     pyglet.font.add_file("font/8-bit wonder.ttf")
     director.init(width=WIDTH, height=HEIGHT, fullscreen=True)
@@ -320,7 +336,9 @@ if __name__ == "__main__":
         TextLayer("NOW TAKE A SHOWER")
     ])
 
+    sceneManager = SceneManager(scenes)
+
     # workaround for pyglet refresh issue
     pyglet.clock.schedule(lambda dt: None)
 
-    director.run(SequenceScene(*scenes))
+    director.run(sceneManager.current_scene())
