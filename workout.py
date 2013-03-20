@@ -258,7 +258,8 @@ class Level(object):
     scores = [
         "LOSER",
         "OK",
-        "GREAT"
+        "GREAT",
+        "AWESOME"
     ]
 
     def __init__(self, min_rate, max_rate):
