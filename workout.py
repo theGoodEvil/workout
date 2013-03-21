@@ -305,38 +305,44 @@ class Level(object):
 
 
 class SceneManager(object):
-    def __init__(self, scenes):
-        self.scenes = scenes
+    def __init__(self, scene_defs):
+        self.scene_defs = scene_defs
         self.current_scene_id = 0
 
     def current_scene(self):
-        return self.scenes[self.current_scene_id]
+        scene_def = self.scene_defs[self.current_scene_id]
+
+        layer_class = scene_def[0]
+        args = scene_def[1:]
+
+        layer = layer_class(*args)
+        return Scene(layer)
 
     def next_scene(self):
-        self.current_scene_id = (self.current_scene_id + 1) % len(self.scenes)
+        self.current_scene_id = (self.current_scene_id + 1) % len(self.scene_defs)
         director.replace(SlideInRTransition(self.current_scene(), duration=0.1))
 
 
 if __name__ == "__main__":
     pyglet.font.add_file("font/8-bit wonder.ttf")
-    director.init(width=WIDTH, height=HEIGHT, fullscreen=True)
+    director.init(width=WIDTH, height=HEIGHT, fullscreen=False)
 
-    scenes = map(Scene, [
-        TextLayer("WORKOUT"),
-        TextLayer("HELLO<br/>MY NAME IS ARNOLD"),
-        TextLayer("I AM YOUR INSTRUCTOR"),
-        TextLayer("WARM UP<br/>80-100 BPM"),
-        WorkoutLayer(Level, [80, 100], "sound/loop90.wav"),
-        TextLayer("ALL RIGHT<br/>NOW LETS GET SERIOUS"),
-        TextLayer("LEVEL 1<br/>120-140 BPM"),
-        WorkoutLayer(Level, [120, 140], "sound/loop130.wav"),
-        TextLayer("COME ON<br/>MORE ENERGY"),
-        TextLayer("LEVEL 2<br/>OVER 200 BPM"),
-        WorkoutLayer(Level, [200, 1000], "sound/loop220.wav"),
-        TextLayer("NOW TAKE A SHOWER")
-    ])
+    scene_defs = [
+        [TextLayer, "WORKOUT"],
+        [TextLayer, "HELLO<br/>MY NAME IS ARNOLD"],
+        [TextLayer, "I AM YOUR INSTRUCTOR"],
+        [TextLayer, "WARM UP<br/>80-100 BPM"],
+        [WorkoutLayer, Level, [80, 100], "sound/loop90.wav"],
+        [TextLayer, "ALL RIGHT<br/>NOW LETS GET SERIOUS"],
+        [TextLayer, "LEVEL 1<br/>120-140 BPM"],
+        [WorkoutLayer, Level, [120, 140], "sound/loop130.wav"],
+        [TextLayer, "COME ON<br/>MORE ENERGY"],
+        [TextLayer, "LEVEL 2<br/>OVER 200 BPM"],
+        [WorkoutLayer, Level, [200, 1000], "sound/loop220.wav"],
+        [TextLayer, "NOW TAKE A SHOWER"]
+    ]
 
-    sceneManager = SceneManager(scenes)
+    sceneManager = SceneManager(scene_defs)
 
     # workaround for pyglet refresh issue
     pyglet.clock.schedule(lambda dt: None)
