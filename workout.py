@@ -345,6 +345,6 @@ if __name__ == "__main__":
     sceneManager = SceneManager(scene_defs)
 
     # workaround for pyglet refresh issue
-    pyglet.clock.schedule(lambda dt: None)
+    pyglet.clock.schedule_interval(lambda dt: None, 1 / 60.0)
 
     director.run(sceneManager.current_scene())
