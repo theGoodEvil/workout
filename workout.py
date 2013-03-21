@@ -219,9 +219,13 @@ class WorkoutLayer(Layer):
 
     def complete(self, delta_time):
         self.is_complete = True
+
         self.audio_player.pause()
+        self.audio_player.next()
+
         self.unschedule(self.instruct)
         self.unschedule(self.complete)
+
         map(operator.methodcaller("show_score"), self.player_layers)
 
     def on_enter(self):
