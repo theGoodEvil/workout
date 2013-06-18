@@ -12,7 +12,6 @@ from cocos.scene import Scene
 from cocos.scenes.transitions import SlideInRTransition
 from cocos.sprite import Sprite
 from cocos.text import HTMLLabel
-from cocos.utils import SequenceScene
 
 import pyglet
 
