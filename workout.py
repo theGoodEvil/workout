@@ -17,7 +17,14 @@ import pyglet
 
 
 NUM_PLAYERS = 2
-PLAYER_KEYS = [pyglet.window.key.LEFT, pyglet.window.key.RIGHT]
+
+PLAYER_KEYS = [
+    # For single-button mode, use the same key for left and right,
+    # e.g. (pyglet.window.key.LEFT, pyglet.window.key.LEFT)
+    (pyglet.window.key.LEFT, pyglet.window.key.RIGHT),
+    (pyglet.window.key.UP, pyglet.window.key.DOWN)
+]
+
 INSTRUCTOR_INTERVAL = 4
 
 WIDTH = 1920
@@ -68,12 +75,29 @@ Pulse.register_event_type("on_rate_changed")
 
 
 class Player(object):
-    def __init__(self, key):
-        self.key = key
+    def __init__(self, keys):
+        self.keys = keys
+        self.first_key = True
+        self.next_key_id = 0
         self.pulse = Pulse()
 
-    def trigger(self):
-        self.pulse.tick()
+    def handle_key_press(self, key):
+        if self.first_key and key in self.keys:
+            self.first_key = False
+            self.next_key_id = self.keys.index(key)
+
+        if key == self.keys[self.next_key_id]:
+            self.pulse.tick()
+            self.next_key_id = 1 - self.next_key_id
+            return True
+
+        return False
+
+    def handle_key_release(self, key):
+        if key in self.keys:
+            return True
+
+        return False
 
 
 class MessageLayer(Layer):
@@ -113,15 +137,12 @@ class HeartbeatLayer(Layer):
         self.add(self.heart)
 
     def on_key_press(self, key, modifiers):
-        if key == self.player.key and not self.key_is_pressed:
-            self.key_is_pressed = True
+        if self.player.handle_key_press(key):
             self.HEART_BEAT.play()
             self.heart.scale = self.HEART_SIZE_BIG
-            self.player.trigger()
 
     def on_key_release(self, key, modifiers):
-        if key == self.player.key:
-            self.key_is_pressed = False
+        if self.player.handle_key_release(key):
             self.heart.scale = self.HEART_SIZE_SMALL
 
 
