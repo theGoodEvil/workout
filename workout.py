@@ -16,8 +16,8 @@ from cocos.text import HTMLLabel
 import pyglet
 
 
-PLAYER_ONE_KEY = pyglet.window.key.LEFT
-PLAYER_TWO_KEY = pyglet.window.key.RIGHT
+NUM_PLAYERS = 2
+PLAYER_KEYS = [pyglet.window.key.LEFT, pyglet.window.key.RIGHT]
 INSTRUCTOR_INTERVAL = 4
 
 WIDTH = 1920
@@ -82,13 +82,13 @@ class MessageLayer(Layer):
 
         self.label = HTMLLabel(
             make_html(""),
-            width=WIDTH / 2,
+            width=WIDTH / NUM_PLAYERS,
             anchor_x="center",
             anchor_y="center",
             multiline=True
         )
 
-        self.label.position = (WIDTH / 4, HEIGHT * 7 / 8)
+        self.label.position = (WIDTH / (2 * NUM_PLAYERS), HEIGHT * 7 / 8)
         self.add(self.label)
 
     def set_text(self, text):
@@ -108,7 +108,7 @@ class HeartbeatLayer(Layer):
         self.key_is_pressed = False
 
         self.heart = Sprite("heart.png")
-        self.heart.position = (WIDTH / 4, HEIGHT / 2)
+        self.heart.position = (WIDTH / (2 * NUM_PLAYERS), HEIGHT / 2)
         self.heart.scale = self.HEART_SIZE_SMALL
         self.add(self.heart)
 
@@ -139,7 +139,7 @@ class PlayerLayer(ColorLayer):
     WARNING_COLOR = (255, 0, 0)
 
     def __init__(self, player, level, position):
-        super(PlayerLayer, self).__init__(0, 0, 0, 255, width=WIDTH / 2, height=HEIGHT)
+        super(PlayerLayer, self).__init__(0, 0, 0, 255, width=WIDTH / NUM_PLAYERS, height=HEIGHT)
         self.color = self.WORKOUT_COLOR
         self.player = player
         self.level = level
@@ -198,10 +198,14 @@ class WorkoutLayer(Layer):
         self.level_class = level_class
         self.is_complete = False
 
-        self.player_layers = [
-            PlayerLayer(Player(PLAYER_ONE_KEY), level_class(*level_args), (0, 0)),
-            PlayerLayer(Player(PLAYER_TWO_KEY), level_class(*level_args), (WIDTH / 2, 0))
-        ]
+        def make_player_layer(i):
+            return PlayerLayer(
+                Player(PLAYER_KEYS[i]),
+                level_class(*level_args),
+                (i * WIDTH / NUM_PLAYERS, 0)
+            )
+
+        self.player_layers = map(make_player_layer, range(NUM_PLAYERS))
 
         map(self.add, self.player_layers)
         self.add(ProgressBar(level_class.time))
